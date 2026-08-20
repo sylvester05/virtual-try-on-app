@@ -1,0 +1,12 @@
+# Install CUDA-enabled torch first so the editable install of fashn_vton
+# (which requires torch) doesn't resolve to the CPU wheel from PyPI.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+
+onnxruntime-gpu==1.23.2
+
+gradio>=4.44.0
+spaces>=0.19.0
+
+-e .

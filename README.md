@@ -127,6 +127,16 @@ If you use FASHN VTON v1.5 in your research, please cite:
 
 ---
 
+## Deployment to Hugging Face Spaces
+
+Ready to put this online? We've split the app across two free Hugging Face Spaces —
+a **ZeroGPU Space** that runs the model, and a tiny **CPU Docker gateway** that
+serves the web UI and proxies to it. See [DEPLOY_HUGGINGFACE.md](DEPLOY_HUGGINGFACE.md)
+for step-by-step instructions.
+
+- `hf-space-gpu/` — ZeroGPU inference backend (Gradio wrapper, self-contained)
+- `hf-space-gateway/` — FastAPI gateway + UI (Docker, CPU, no torch)
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) for details.
