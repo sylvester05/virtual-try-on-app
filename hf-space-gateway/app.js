@@ -392,11 +392,14 @@ function _collectGalleryUrls(value, out) {
   }
   if (value && typeof value === "object") {
     if (value.image && typeof value.image === "object") {
-      const u = value.image.url || value.image.path;
+      // Prefer server-local path to build a stable /file= URL. The SSE `url`
+      // field is session-scoped (/call/<api>/<event>/file=...) and stops
+      // working after the event stream closes.
+      const u = value.image.path || value.image.url;
       if (u) out.push(u);
     }
     if (value.video && typeof value.video === "object") {
-      const u = value.video.url || value.video.path;
+      const u = value.video.path || value.video.url;
       if (u) out.push(u);
     }
     for (const k of ["data", "output", "value"]) {
@@ -483,13 +486,37 @@ async function streamEventUrls(eventId) {
   }
 }
 
-// Make a result URL usable from the browser.
-function _resolveResultUrl(url) {
+// Gradio serves generated files at https://<space>/file=<server-path>.
+// The SSE output carries the file's server path (`/tmp/gradio/...`), and
+// optionally a session-scoped url (`/call/<api>/<event>/file=<path>`) that
+// only works while the event stream is alive. Build a stable URL from the
+// server path instead.
+function _loadableResultUrl(url) {
   if (!url) return url;
   if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) return GRADIO_SPACE_URL + url;
-  // Server-local file path (rare) — best effort.
-  return GRADIO_SPACE_URL + "/gradio_file=" + encodeURIComponent(url);
+
+  // Extract the server-side file path from either form.
+  let serverPath = "";
+  const sessionMatch = url.match(/^\/call\/[^/]+\/[^/]+\/file=(.*)$/);
+  if (sessionMatch) {
+    serverPath = sessionMatch[1];
+  } else if (url.startsWith("/file=")) {
+    serverPath = url.slice("/file=".length);
+  } else if (url.startsWith("/gradio_file=")) {
+    serverPath = url.slice("/gradio_file=".length);
+  } else if (url.startsWith("/tmp/") || url.startsWith("/")) {
+    serverPath = url.replace(/^\/+/, "/");
+  } else {
+    serverPath = url;
+  }
+
+  // Preserve slashes in the path (encodeURIComponent would turn them into
+  // %2F, which some proxies reject); encode only special characters.
+  const encoded = serverPath
+    .split("/")
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+  return GRADIO_SPACE_URL + "/file=" + encoded;
 }
 
 async function runTryOn() {
@@ -550,7 +577,7 @@ async function runTryOn() {
     const rawUrls = await streamEventUrls(eventId);
     if (!rawUrls.length) throw new Error("The model returned no images. Try again in a moment.");
 
-    state.lastResults = rawUrls.map(_resolveResultUrl);
+    state.lastResults = rawUrls.map(_loadableResultUrl);
     renderResults();
     $("results").classList.remove("hidden");
     $("results-meta").textContent =

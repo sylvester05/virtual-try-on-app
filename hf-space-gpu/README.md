@@ -12,7 +12,7 @@ short_description: GPU inference backend for the My Heart virtual try-on app
 
 # My Heart — Virtual Try-On (ZeroGPU inference Space)
 
-Minimal Gradio Space that hosts the `fashn-vton-1.5` `TryOnPipeline` on a free ZeroGPU instance. It exists to be called as an API — the full try-on UI lives in the separate CPU gateway Space (`my-heart-vton-gateway`).
+Minimal Gradio Space that hosts the `fashn-vton-1.5` `TryOnPipeline` on a free ZeroGPU instance. It exposes the model through the Gradio API (`/gradio_api/call/run_tryon`) so the custom static UI in `my-heart-vton-gateway` can call it directly from the browser.
 
 ## Deployment
 

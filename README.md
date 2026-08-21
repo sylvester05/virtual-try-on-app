@@ -130,12 +130,13 @@ If you use FASHN VTON v1.5 in your research, please cite:
 ## Deployment to Hugging Face Spaces
 
 Ready to put this online? We've split the app across two free Hugging Face Spaces —
-a **ZeroGPU Space** that runs the model, and a tiny **CPU Docker gateway** that
-serves the web UI and proxies to it. See [DEPLOY_HUGGINGFACE.md](DEPLOY_HUGGINGFACE.md)
-for step-by-step instructions.
+a **ZeroGPU Space** that runs the model, and a **static Space** that serves the
+custom web UI and calls the model directly from the browser via
+`@gradio/client`. No Docker, no API server needed. See
+[DEPLOY_HUGGINGFACE.md](DEPLOY_HUGGINGFACE.md) for step-by-step instructions.
 
 - `hf-space-gpu/` — ZeroGPU inference backend (Gradio wrapper, self-contained)
-- `hf-space-gateway/` — FastAPI gateway + UI (Docker, CPU, no torch)
+- `hf-space-gateway/` — Static UI gateway (HTML/JS/CSS, calls ZeroGPU directly)
 
 ## License
 

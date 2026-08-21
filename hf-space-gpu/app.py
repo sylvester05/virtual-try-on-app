@@ -1,21 +1,68 @@
 """My Heart — Virtual Try-On: ZeroGPU inference Space.
 
 A minimal Gradio app whose only job is to serve the FASHN VTON v1.5
-``TryOnPipeline`` to a remote FastAPI gateway.
+``TryOnPipeline`` to the browser via the Gradio API.
 
-The Gradio REST API (``/gradio_api/call/run_tryon``) is what the gateway
-(``hf-space-gateway/server.py``) talks to — nobody uses this UI directly.
+The custom static UI in ``hf-space-gateway`` calls
+``/gradio_api/call/run_tryon`` directly through ``@gradio/client`` —
+no FastAPI gateway is needed; this Space's own page is just a handy demo.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# gradio_client schema-walker compatibility patch (defense-in-depth)
+# ---------------------------------------------------------------------------
+# Gradio 4.44.1 + gradio_client 1.3.0 + Pydantic >= 2.11 crashes on launch with
+#   TypeError: argument of type 'bool' is not iterable
+# because Pydantic 2.11 emits boolean schema nodes (additionalProperties: true
+# / false) that gradio_client assumes are dicts. requirements.txt pins
+# pydantic<2.11; this patch additionally short-circuits non-dict schema nodes
+# so the app starts even if a newer Pydantic slips in. Applied BEFORE `import
+# gradio` because gradio reads these functions at import time.
+import gradio_client.utils as _gcu
+
+_orig_json_schema_to_python_type = _gcu._json_schema_to_python_type
+
+
+def _safe_json_schema_to_python_type(schema, defs=None):
+    if not isinstance(schema, dict):
+        return "Any"
+    return _orig_json_schema_to_python_type(schema, defs)
+
+
+if getattr(_gcu, "_json_schema_to_python_type", None) is not None:
+    _gcu._json_schema_to_python_type = _safe_json_schema_to_python_type
+
+_orig_get_type = getattr(_gcu, "get_type", None)
+if _orig_get_type is not None:
+
+    def _safe_get_type(schema):
+        if not isinstance(schema, dict):
+            return "Any"
+        return _orig_get_type(schema)
+
+    _gcu.get_type = _safe_get_type
+
 import gradio as gr
 import spaces
+
+# ---------------------------------------------------------------------------
+# Vendored-package shim
+# ---------------------------------------------------------------------------
+# The ZeroGPU build installs `requirements.txt` in a base stage before the app
+# source is copied, so we can't use `pip install -e .`. Instead the vendored
+# package lives at <repo>/src and we add it to sys.path below.
+BASE_DIR = Path(__file__).resolve().parent
+SRC_DIR = BASE_DIR / "src"
+if SRC_DIR.exists() and str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 logger = logging.getLogger("myheart-hf-gpu")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -24,10 +71,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 # Configuration
 # ---------------------------------------------------------------------------
 
-BASE_DIR = Path(__file__).resolve().parent
-
-# The Space repo ships a vendored copy of the package (src/ + pyproject.toml),
-# so `pip install -e .` makes `import fashn_vton` resolve to this folder.
+# The Space repo ships a vendored copy of the package (src/fashn_vton).
 WEIGHTS_DIR = Path(os.environ.get("VTON_WEIGHTS_DIR", BASE_DIR / "weights"))
 WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -89,7 +133,7 @@ def _unpad(images: list, pad_fn) -> list:
     return [pad_fn.unpad(img) for img in images]
 
 
-@spaces.GPU(duration=100)
+@spaces.GPU(duration=110)
 def run_tryon(
     person_image,
     garment_image,
@@ -101,10 +145,7 @@ def run_tryon(
     seed: int = 42,
     segmentation_free: bool = True,
 ):
-    """Run one try-on generation and return PNG base64 data URLs."""
-    import base64
-    import io
-
+    """Run one try-on generation and return the rendered PIL images."""
     from PIL import Image
 
     logger.info(
@@ -131,18 +172,12 @@ def run_tryon(
         segmentation_free=segmentation_free,
     )
     # Unpad each output so the result isn't letter-boxed with black borders.
-    images = _unpad(result.images, pipe.resize_pad_fn)
-
-    out = []
-    for img in images:
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        out.append(f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode('ascii')}")
-    return out
+    return _unpad(result.images, pipe.resize_pad_fn)
 
 
 demo = gr.Interface(
     fn=run_tryon,
+    api_name="run_tryon",
     inputs=[
         gr.Image(type="pil", label="Person photo (required)"),
         gr.Image(type="pil", label="Garment photo (required)"),
@@ -158,9 +193,9 @@ demo = gr.Interface(
     title="My Heart — Virtual Try-On (API backend)",
     description=(
         "GPU inference endpoint for the My Heart virtual try-on app. "
-        "This UI is intentionally minimal — the FastAPI gateway calls this "
-        "Space's Gradio API (`/gradio_api/call/run_tryon`) and presents the "
-        "results in the full web app."
+        "The custom web UI in `my-heart-vton-gateway` calls this Space's "
+        "Gradio API (`/gradio_api/call/run_tryon`) directly from the browser "
+        "via @gradio/client."
     ),
     allow_flagging="never",
 )
