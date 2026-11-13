@@ -7,19 +7,49 @@ This repo contains minimal inference code to run virtual try-on with the FASHN V
 
 ---
 
-## Local Installation
+## Recommended Setup on Ubuntu / WSL
 
-We recommend using a virtual environment:
+Ubuntu 26.04 does not provide a compatible system Python 3.12 package in the default repositories, so the recommended workflow is to use `uv` to install and manage Python 3.12 for this project.
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+cd /mnt/c/virtual-try-on-app
+
+# Install uv if needed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.cargo/env
+
+# Install Python 3.12 with uv
+uv python install 3.12
+
+# Create a project virtual environment with Python 3.12
+uv venv --python 3.12 .venv
+source .venv/bin/activate
+
+# Install the project and dependencies
+uv pip install -e .
+```
+
+If you also want the FastAPI web app dependencies:
+
+```bash
+uv pip install -e '.[web]'
+```
+
+**Note:** This project supports Python 3.10–3.12. The `pyproject.toml` file declares `requires-python = ">=3.10"` and includes 3.12 support.
+
+### Alternative (plain venv + pip)
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
 pip install -e .
 ```
 
 **Note:** Installation includes `onnxruntime-gpu` for GPU-accelerated pose detection. Ensure CUDA is properly configured on your system. For CPU-only environments, replace with the CPU version:
 
 ```bash
-pip uninstall onnxruntime-gpu && pip install onnxruntime
+pip uninstall onnxruntime-gpu
+pip install onnxruntime
 ```
 
 ---
@@ -29,7 +59,7 @@ pip uninstall onnxruntime-gpu && pip install onnxruntime
 Download the required model weights (~2 GB total):
 
 ```bash
-python scripts/download_weights.py --weights-dir ./weights
+uv run python scripts/download_weights.py --weights-dir ./weights
 ```
 
 This downloads:
@@ -67,7 +97,7 @@ result.images[0].save("output.png")
 ### CLI
 
 ```bash
-python examples/basic_inference.py \
+uv run python examples/basic_inference.py \
     --weights-dir ./weights \
     --person-image examples/data/model.webp \
     --garment-image examples/data/garment.webp \
