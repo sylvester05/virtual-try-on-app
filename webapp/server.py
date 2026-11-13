@@ -174,7 +174,7 @@ async def status():
 async def examples():
     """Return URLs for the bundled example images (model + garment)."""
     files: dict[str, str] = {}
-    for name in ("model.webp", "garment.webp"):
+    for name in ("model.jpg", "garment.jpg"):
         if (EXAMPLES_DIR / name).exists():
             files[name] = f"/examples/{name}"
     return files
