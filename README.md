@@ -1,20 +1,7 @@
-# FASHN VTON v1.5: Efficient Maskless Virtual Try-On in Pixel Space
+# MyHEART VTON v1.5: Efficient Maskless Virtual Try-On in Pixel Space
 
-<div align="center">
-  <a href="https://fashn.ai/research/vton-1-5"><img src='https://img.shields.io/badge/Project-Page-1A1A1A?style=flat' alt='Project Page'></a>&ensp;
-  <a href='https://huggingface.co/fashn-ai/fashn-vton-1.5'><img src='https://img.shields.io/badge/Hugging%20Face-Model-FFD21E?style=flat&logo=HuggingFace&logoColor=FFD21E' alt='Hugging Face Model'></a>&ensp;
-  <a href="https://huggingface.co/spaces/fashn-ai/fashn-vton-1.5"><img src='https://img.shields.io/badge/Hugging%20Face-Spaces-FFD21E?style=flat&logo=HuggingFace&logoColor=FFD21E' alt='Hugging Face Spaces'></a>&ensp;
-  <a href=""><img src='https://img.shields.io/badge/arXiv-Coming%20Soon-b31b1b?style=flat&logo=arXiv&logoColor=b31b1b' alt='arXiv'></a>&ensp;
-  <a href="LICENSE"><img src='https://img.shields.io/badge/License-Apache--2.0-gray?style=flat' alt='License'></a>
-</div>
-
-by [FASHN AI](https://fashn.ai)
 
 Virtual try-on model that generates photorealistic images directly in pixel space without requiring segmentation masks.
-
-<p align="center">
-  <img src="https://static.fashn.ai/repositories/fashn-vton-v15/results/hero_collage.webp" alt="FASHN VTON v1.5 examples" width="900">
-</p>
 
 This repo contains minimal inference code to run virtual try-on with the FASHN VTON v1.5 model weights. Given a person image and a garment image, the model generates a photorealistic image of the person wearing the garment. Supports both model photos and flat-lay product shots as garment inputs.
 
@@ -25,8 +12,6 @@ This repo contains minimal inference code to run virtual try-on with the FASHN V
 We recommend using a virtual environment:
 
 ```bash
-git clone https://github.com/fashn-AI/fashn-vton-1.5.git
-cd fashn-vton-1.5
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 ```
@@ -105,34 +90,4 @@ See [`examples/basic_inference.py`](examples/basic_inference.py) for additional 
 
 ---
 
-## API
-
-FASHN provides a suite of [fashion AI APIs](https://fashn.ai/products/api) including virtual try-on, model generation, image-to-video, and more. See the [docs](https://docs.fashn.ai/) to get started.
-
----
-
-## Citation
-
-If you use FASHN VTON v1.5 in your research, please cite:
-
-```bibtex
-@article{bochman2026fashnvton,
-  title={FASHN VTON v1.5: Efficient Maskless Virtual Try-On in Pixel Space},
-  author={Bochman, Dan and Bochman, Aya},
-  journal={arXiv preprint},
-  year={2026},
-  note={Paper coming soon}
-}
-```
-
----
-
-## License
-
-Apache-2.0. See [LICENSE](LICENSE) for details.
-
-**Third-party components:**
-- [DWPose](https://github.com/IDEA-Research/DWPose) (Apache-2.0)
-- [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX) (Apache-2.0)
-- [fashn-human-parser](https://github.com/fashn-AI/fashn-human-parser) ([License](https://github.com/fashn-AI/fashn-human-parser?tab=readme-ov-file#license))
 
