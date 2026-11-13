@@ -259,7 +259,7 @@ async function urlToFile(url, filename) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Could not load ${url}`);
   const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type || "image/webp" });
+  return new File([blob], filename, { type: blob.type || "image/jpeg" });
 }
 
 $("load-example").addEventListener("click", async () => {
@@ -267,10 +267,14 @@ $("load-example").addEventListener("click", async () => {
     const res = await fetch("/api/examples");
     if (!res.ok) throw new Error("Example images unavailable");
     const files = await res.json();
-    if (!files["model.webp"] || !files["garment.webp"]) throw new Error("Example images unavailable");
 
-    const personFile = await urlToFile(files["model.webp"], "model.webp");
-    const garmentFile = await urlToFile(files["garment.webp"], "garment.webp");
+    const personKey = files["model.jpg"] ? "model.jpg" : files["model.webp"] ? "model.webp" : null;
+    const garmentKey = files["garment.jpg"] ? "garment.jpg" : files["garment.webp"] ? "garment.webp" : null;
+
+    if (!personKey || !garmentKey) throw new Error("Example images unavailable");
+
+    const personFile = await urlToFile(files[personKey], personKey);
+    const garmentFile = await urlToFile(files[garmentKey], garmentKey);
     setImage("person", personFile);
     setImage("garment", garmentFile);
     showToast("Example photos loaded", "success");

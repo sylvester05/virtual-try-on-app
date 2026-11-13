@@ -37,7 +37,10 @@ from starlette.concurrency import run_in_threadpool
 WEBAPP_DIR = Path(__file__).resolve().parent
 ROOT_DIR = WEBAPP_DIR.parent
 STATIC_DIR = WEBAPP_DIR / "static"
-EXAMPLES_DIR = ROOT_DIR / "examples" / "data"
+EXAMPLES_DIR = ROOT_DIR / "examples"
+LEGACY_EXAMPLES_DIR = ROOT_DIR / "examples" / "data"
+if not EXAMPLES_DIR.exists() and LEGACY_EXAMPLES_DIR.exists():
+    EXAMPLES_DIR = LEGACY_EXAMPLES_DIR
 WEIGHTS_DIR = Path(os.environ.get("VTON_WEIGHTS_DIR", ROOT_DIR / "weights"))
 DEVICE_OVERRIDE = os.environ.get("VTON_DEVICE") or None
 
@@ -174,9 +177,26 @@ async def status():
 async def examples():
     """Return URLs for the bundled example images (model + garment)."""
     files: dict[str, str] = {}
-    for name in ("model.jpg", "garment.jpg"):
-        if (EXAMPLES_DIR / name).exists():
-            files[name] = f"/examples/{name}"
+    candidate_names = [
+        ("model.jpg", "model.webp"),
+        ("garment.jpg", "garment.webp"),
+    ]
+    for primary, legacy in candidate_names:
+        current = EXAMPLES_DIR / primary
+        if current.exists():
+            files[primary] = f"/examples/{primary}"
+            continue
+        legacy_path = EXAMPLES_DIR / legacy
+        if legacy_path.exists():
+            files[legacy] = f"/examples/{legacy}"
+            continue
+        legacy_root = LEGACY_EXAMPLES_DIR / primary
+        if legacy_root.exists():
+            files[primary] = f"/examples/{primary}"
+            continue
+        legacy_root = LEGACY_EXAMPLES_DIR / legacy
+        if legacy_root.exists():
+            files[legacy] = f"/examples/{legacy}"
     return files
 
 
