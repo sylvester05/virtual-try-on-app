@@ -205,7 +205,7 @@ async def tryon(
     person_image: UploadFile = File(..., description="Photo of the person"),
     garment_image: UploadFile = File(..., description="Photo of the garment"),
     category: str = Form("tops", description="tops | bottoms | one-pieces"),
-    garment_photo_type: str = Form("model", description="model | flat-lay"),
+    garment_photo_type: str = Form("flat-lay", description="model | flat-lay"),
     num_samples: int = Form(1, description="Number of outputs to generate (1-4)"),
     num_timesteps: int = Form(30, description="Diffusion steps (20-50)"),
     guidance_scale: float = Form(1.5, description="Classifier-free guidance strength"),

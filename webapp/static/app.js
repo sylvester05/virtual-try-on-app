@@ -8,7 +8,7 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   category: "tops",
-  garmentPhotoType: "model",
+  garmentPhotoType: "flat-lay",
   numSamples: 1,
   numTimesteps: 30,
   guidanceScale: 1.5,
