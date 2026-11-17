@@ -16,7 +16,7 @@ cd /mnt/c/virtual-try-on-app
 
 # Install uv if needed
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.cargo/env
+source $HOME/.local/bin/env
 
 # Install Python 3.12 with uv
 uv python install 3.12
@@ -59,7 +59,7 @@ pip install onnxruntime
 Download the required model weights (~2 GB total):
 
 ```bash
-uv run python scripts/download_weights.py --weights-dir ./weights
+python scripts/download_weights.py --weights-dir ./weights
 ```
 
 This downloads:
